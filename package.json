@@ -1,0 +1,16 @@
+{
+  "name": "story-hunt",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Story Hunt: a story game for seniors that only finishes when four people meet.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

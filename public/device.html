@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Story Hunt · Café device</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wide">
+  <p class="links"><a href="/">Senior app</a><a href="/dashboard.html">Dashboard</a></p>
+  <h1>Café checkpoint device</h1>
+  <p class="muted">This page uses the same API as the real ESP32. Leave it open next to the real device and it mirrors the screen and reads it aloud.</p>
+
+  <div class="device">
+    <div class="screen" id="screen" aria-live="polite"></div>
+    <div class="keys">
+      <div class="key red"><button data-b="red" aria-label="Red button"></button><span class="lbl" id="l-red"></span></div>
+      <div class="key yellow"><button data-b="yellow" aria-label="Yellow button"></button><span class="lbl" id="l-yellow"></span></div>
+      <div class="key green"><button data-b="green" aria-label="Green button"></button><span class="lbl" id="l-green"></span></div>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:520px;margin:24px auto 0">
+    <h2>Simulate a card tap</h2>
+    <select id="who" aria-label="Card holder"></select>
+    <button class="btn mini" id="tap">Tap card</button>
+    <button class="btn mini quiet" id="reset">Reset device</button>
+    <label style="display:block;margin-top:10px"><input type="checkbox" id="voice" checked> Read the screen aloud</label>
+  </div>
+</div>
+<script>
+const TOKEN = 'demo-device-token', CHECKPOINT = 'cafe-1';
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const post = (p, body) => fetch('/api' + p, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ deviceToken: TOKEN, checkpointId: CHECKPOINT, ...body }) }).then((r) => r.json());
+let last = '';
+function draw(s) {
+  const key = s.title + '|' + s.lines.join('|');
+  if (key === last) return;
+  last = key;
+  document.getElementById('screen').innerHTML = `<h2>${esc(s.title)}</h2>` + s.lines.map((l) => `<p>${esc(l)}</p>`).join('');
+  for (const c of ['red', 'yellow', 'green']) document.getElementById('l-' + c).textContent = s.buttons ? s.buttons[c] : '';
+  if (document.getElementById('voice').checked && 'speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(s.speak); u.lang = 'en-GB'; u.rate = 0.9; speechSynthesis.speak(u);
+  }
+}
+async function poll() { try { draw(await (await fetch('/api/device/state?checkpointId=' + CHECKPOINT)).json()); } catch {} }
+async function people() {
+  const d = await (await fetch('/api/dashboard')).json();
+  const sel = document.getElementById('who'), keep = sel.value;
+  sel.innerHTML = d.circles.map((c) => `<optgroup label="${esc(c.name)} · ${esc(c.story)}">` +
+    c.members.map((m) => `<option value="${esc(m.cardId)}">${esc(m.name)}${m.present ? ' (arrived)' : ''}</option>`).join('') + '</optgroup>').join('')
+    + '<option value="UNKNOWN-CARD">An unknown card</option>';
+  if (keep) sel.value = keep;
+}
+document.getElementById('tap').onclick = async () => { draw(await post('/device/tap', { cardId: document.getElementById('who').value })); people(); };
+document.getElementById('reset').onclick = async () => { await post('/device/reset', {}); poll(); };
+document.querySelectorAll('[data-b]').forEach((b) => { b.onclick = async () => draw(await post('/device/button', { button: b.dataset.b })); });
+poll(); people(); setInterval(poll, 1000); setInterval(people, 4000);
+</script>
+</body>
+</html>
