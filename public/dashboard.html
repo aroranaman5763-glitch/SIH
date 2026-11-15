@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Story Hunt · Dashboard</title>
+  <title>Story Hunt · Partner dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wide">
   <p class="links"><a href="/">Senior app</a><a href="/device.html">Café device</a></p>
-  <h1>Story Hunt dashboard</h1>
-  <p class="muted">One view for the three partners: the coordinator (circles), the café (verified visits) and the NGO (community events).</p>
+  <h1>Story Hunt partner dashboard</h1>
+  <p class="muted">One live view for the three partners: the coordinator (circles), the café (verified visits) and the NGO (community hours).</p>
   <div class="kpis" id="kpis"></div>
   <div class="cols">
-    <div class="card"><h2>☕ Café partner: verified visits</h2><div id="cafe"></div></div>
-    <div class="card"><h2>🧒 NGO partner: final-chapter events</h2><div id="ngo"></div></div>
+    <div class="card"><h2>☕ Café partner: verified off-peak visits</h2><div id="cafe"></div></div>
+    <div class="card"><h2>🧒 NGO partner: community hours</h2><div id="ngo"></div></div>
   </div>
   <h2 style="margin-top:8px">Circles</h2>
   <div id="circles"></div>
@@ -32,29 +32,35 @@ async function load() {
   last = key;
   const k = d.totals, fb = d.feedback;
   document.getElementById('kpis').innerHTML = [
-    [k.seniors, 'Seniors signed up'], [k.circles, 'Circles'], [d.cafe.visits, 'Verified café visits'],
-    [k.solved, 'Stories solved together'], [k.events, 'Community events done'], [k.points, 'Points earned'],
+    [k.seniors, 'Seniors signed up'], [k.circles, 'Circles formed'], [d.cafe.visits, 'Verified café visits'],
+    [k.solved, 'Stories solved together'], [k.hours, 'Volunteer hours given'], [k.redeemed, 'Wellness rewards redeemed'],
     [`${fb.good} / ${fb.okay} / ${fb.bad}`, 'Feedback: good / okay / not good'],
   ].map(([v, l]) => `<div class="kpi"><b>${v}</b>${l}</div>`).join('');
 
   document.getElementById('cafe').innerHTML = `<p><b>${esc(d.cafe.name)}</b> · quiet hours 2 to 5 pm</p>` +
-    (d.cafe.recent.length ? `<table><tr><th>Card tapped by</th><th>Time</th></tr>${d.cafe.recent.map((v) =>
-      `<tr><td>${esc(v.name)}</td><td>${time(v.at)}</td></tr>`).join('')}</table>` : '<p class="muted">No visits yet. Each card tap at the device is one verified visit.</p>');
+    (d.cafe.recent.length ? `<table><tr><th>Card tapped by</th><th>Circle</th><th>Time</th></tr>${d.cafe.recent.map((v) =>
+      `<tr><td>${esc(v.name)}</td><td>${esc(v.circle)}</td><td>${time(v.at)}</td></tr>`).join('')}</table>`
+      : '<p class="muted">No visits yet. Each card tap at the device is one verified visit.</p>');
 
   const evs = d.circles.filter((c) => c.eventStatus !== 'locked');
-  document.getElementById('ngo').innerHTML = evs.length ? evs.map((c) => `<p><b>${esc(c.eventTitle)}</b><br>${esc(c.eventPartner)} · ${esc(c.name)}<br>
-    ${c.eventStatus === 'confirmed' ? '<span class="status ok">Confirmed · +200 points each</span>'
-      : `<button class="btn mini" data-confirm="${c.id}">Confirm the circle came</button>`}</p>`).join('')
-    : '<p class="muted">An event opens when a circle solves its story at the café.</p>';
+  document.getElementById('ngo').innerHTML = evs.length ? evs.map((c) => {
+    const going = c.members.filter((m) => m.rsvp);
+    return `<p><b>${esc(c.eventTitle)}</b><br>${esc(c.eventPartner)} · ${esc(c.name)} · shared skill: ${esc(c.skill)}<br>
+      <span class="muted">Coming: ${going.length ? going.map((m) => esc(m.name)).join(', ') : 'nobody has replied yet'} (${going.length} of 4)</span><br>
+      ${c.eventStatus === 'confirmed' ? '<span class="status ok">Confirmed · 4 volunteer hours · +200 points each</span>'
+        : `<button class="btn mini" data-confirm="${c.id}">Confirm the circle came</button>`}</p>`;
+  }).join('') : '<p class="muted">An event opens when a circle solves its story at the café. It is chosen by the skill the circle shares.</p>';
 
-  document.getElementById('circles').innerHTML = d.circles.length ? d.circles.map((c) => `<div class="card">
-    <h2>${esc(c.name)} · ${esc(c.story)}
-      <span class="status ${c.status === 'solved' ? 'ok' : c.members.length === 4 ? 'wait' : ''}">${c.status === 'solved' ? 'Solved' : c.members.length === 4 ? 'Ready to meet' : `Forming ${c.members.length}/4`}</span></h2>
+  const stage = (c) => c.status === 'solved' ? ['Solved', 'ok'] : c.members.length < 4 ? [`Forming ${c.members.length}/4`, '']
+    : c.members.every((m) => m.present) ? [`At the table · question ${c.qIndex + 1} of ${c.questions}`, 'wait'] : ['Ready to meet', 'wait'];
+  document.getElementById('circles').innerHTML = d.circles.length ? d.circles.map((c) => { const [label, cls] = stage(c); return `<div class="card">
+    <h2>${esc(c.name)} · ${esc(c.skill)} <span class="status ${cls}">${label}</span></h2>
     <p class="muted">Why matched: ${esc(c.reason)}</p>
-    <table><tr><th>Member</th><th>Skills</th><th>Story</th><th>At café</th><th>Points</th><th>Feedback</th></tr>
-    ${c.members.map((m) => `<tr><td>${esc(m.name)}${m.bot ? ' <span class="muted">(demo)</span>' : ''}</td><td>${esc(m.skills.join(', '))}</td>
-      <td>Day ${m.day}/3</td><td>${m.present ? '✅' : '—'}</td><td>${m.points}</td><td>${esc(c.feedback[m.id] || '—')}</td></tr>`).join('')}</table>
-    ${c.members.length < 4 ? `<button class="btn mini quiet" data-fill="${c.id}">Demo: fill with sample seniors</button>` : ''}</div>`).join('')
+    <table><tr><th>Member</th><th>Plays</th><th>Story</th><th>Card</th><th>Time</th><th>At café</th><th>Wants to teach</th><th>Points</th><th>Feedback</th></tr>
+    ${c.members.map((m) => `<tr><td>${esc(m.name)}${m.bot ? ' <span class="muted">(sample)</span>' : ''}</td><td>${esc(m.role)}</td>
+      <td>${m.chapter}/3</td><td>${m.cardLinked ? '✅' : '—'}</td><td>${esc(m.slot || '—')}</td><td>${m.present ? '✅' : '—'}</td>
+      <td>${esc(m.teach || '—')}</td><td>${m.points}</td><td>${esc(c.feedback[m.id] || '—')}</td></tr>`).join('')}</table>
+    ${c.members.length < 4 ? `<button class="btn mini quiet" data-fill="${c.id}">Demo: fill with sample seniors</button>` : ''}</div>`; }).join('')
     : '<div class="card"><p class="muted">No circles yet. Sign up a senior in the app to start.</p></div>';
 }
 document.addEventListener('click', async (e) => {

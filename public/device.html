@@ -22,7 +22,8 @@
   </div>
 
   <div class="card" style="max-width:520px;margin:24px auto 0">
-    <h2>Simulate a card tap</h2>
+    <h2>Tap a card</h2>
+    <p class="muted">Stands in for the physical cards. To link a blank card, press "Link my card" in the app first, then tap it here.</p>
     <select id="who" aria-label="Card holder"></select>
     <button class="btn mini" id="tap">Tap card</button>
     <button class="btn mini quiet" id="reset">Reset device</button>
@@ -50,10 +51,16 @@ async function poll() { try { draw(await (await fetch('/api/device/state?checkpo
 async function people() {
   const d = await (await fetch('/api/dashboard')).json();
   const sel = document.getElementById('who'), keep = sel.value;
-  sel.innerHTML = d.circles.map((c) => `<optgroup label="${esc(c.name)} · ${esc(c.story)}">` +
-    c.members.map((m) => `<option value="${esc(m.cardId)}">${esc(m.name)}${m.present ? ' (arrived)' : ''}</option>`).join('') + '</optgroup>').join('')
-    + '<option value="UNKNOWN-CARD">An unknown card</option>';
-  if (keep) sel.value = keep;
+  const linked = new Set(d.circles.flatMap((c) => c.members.map((m) => m.cardId)));
+  // Blank cards stand in for the physical cards on the table. Tapping one while a
+  // senior's app is waiting links it to them, exactly as the real reader does.
+  const blanks = ['A', 'B', 'C', 'D'].map((x) => 'CARD-000' + x).filter((id) => !linked.has(id));
+  sel.innerHTML = d.circles.map((c) => `<optgroup label="${esc(c.name)} · ${esc(c.skill)}">` +
+    c.members.map((m) => m.cardLinked
+      ? `<option value="${esc(m.cardId)}">${esc(m.name)}'s card${m.present ? ' (arrived)' : ''}</option>`
+      : `<option disabled>${esc(m.name)}: no card linked yet</option>`).join('') + '</optgroup>').join('')
+    + '<optgroup label="Blank cards">' + blanks.map((id) => `<option value="${id}">Blank card ${id.slice(-1)}</option>`).join('') + '</optgroup>';
+  if (keep && [...sel.options].some((o) => o.value === keep && !o.disabled)) sel.value = keep;
 }
 document.getElementById('tap').onclick = async () => { draw(await post('/device/tap', { cardId: document.getElementById('who').value })); people(); };
 document.getElementById('reset').onclick = async () => { await post('/device/reset', {}); poll(); };
