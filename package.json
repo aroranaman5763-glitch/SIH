@@ -5,12 +5,16 @@
   "description": "Story Hunt: a story game for seniors that only finishes when four people meet.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "audio": "node scripts/make-audio.js"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
     "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "msedge-tts": "^2.1.1"
   }
 }

@@ -2,11 +2,14 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { SKILLS, INTERESTS, REWARDS, CAFE, EVENTS, EVENT_DETAIL, POINTS, REFLECTIONS, STORY } = require('./stories');
+const { LANGS, SKILLS, INTERESTS, REWARDS, CAFE, EVENTS, EVENT_DETAIL, POINTS, REFLECTIONS, STORY } = require('./stories');
+const LANG_NAMES = { en: 'English', zh: 'Chinese', ta: 'Tamil', hi: 'Hindi', ms: 'Malay' };
+const pickLang = (l) => (LANGS.includes(l) ? l : 'en');
 
 const PORT = process.env.PORT || 3000;
 const DEVICE_TOKEN = process.env.DEVICE_TOKEN || 'demo-device-token';
-const DB_FILE = process.env.DB_FILE || path.join(__dirname, 'data', 'db.json');
+// On Vercel the project folder is read-only, so data lives in /tmp there (and resets when the server restarts).
+const DB_FILE = process.env.DB_FILE || (process.env.VERCEL ? '/tmp/story-hunt-db.json' : path.join(__dirname, 'data', 'db.json'));
 const COLOURS = ['#b5411c', '#7a4fa3', '#2f6b4f', '#2c5d8a', '#a0522d', '#8a5a00'];
 
 // ---------- tiny JSON-file store ----------
@@ -53,7 +56,7 @@ function createUser({ name, phone, pin, lang, skills, interests, bot = false }) 
   const salt = newId();
   const u = {
     id: newId(), name: String(name || 'Friend').trim().slice(0, 24), phone: normPhone(phone), salt, pin: hashPin(String(pin || ''), salt),
-    lang: lang === 'zh' ? 'zh' : 'en', textSize: 'm', skills: (skills || []).filter((s) => SKILLS.some((x) => x.id === s)).slice(0, 6),
+    lang: pickLang(lang), textSize: 'm', skills: (skills || []).filter((s) => SKILLS.some((x) => x.id === s)).slice(0, 6),
     interests: (interests || []).slice(0, 6), bot, chapter: 0, choices: {}, reflections: {}, points: 0, ledger: [], vouchers: [],
     slot: null, rsvp: false, cardId: null, createdAt: Date.now(),
   };
@@ -178,7 +181,7 @@ function handleButton(checkpointId, button) {
       c.qIndex++; c.wrong = 0;
       if (c.qIndex >= STORY.questions.length) {
         c.status = 'solved'; c.solvedAt = Date.now(); c.event.status = 'open';
-        c.memberIds.forEach((id) => award(db.users[id], POINTS.story, 'Solved The Lost Recipe with your circle'));
+        c.memberIds.forEach((id) => award(db.users[id], POINTS.story, 'Solved ' + STORY.title.en + ' with your circle'));
         d.mode = 'ending'; d.flash = null;
         flash(d, 'Correct!', q.explain.en, 3500);
       } else {
@@ -235,7 +238,7 @@ app.get('/api/users/:id/state', wrap((req) => userState(getUser(req))));
 app.post('/api/users/:id/profile', wrap((req) => {
   const u = getUser(req), b = req.body;
   if (b.name !== undefined && String(b.name).trim()) u.name = String(b.name).trim().slice(0, 24);
-  if (b.lang) u.lang = b.lang === 'zh' ? 'zh' : 'en';
+  if (b.lang) u.lang = pickLang(b.lang);
   if (['s', 'm', 'l'].includes(b.textSize)) u.textSize = b.textSize;
   if (Array.isArray(b.skills) && b.skills.length) u.skills = b.skills.filter((s) => SKILLS.some((x) => x.id === s));
   if (Array.isArray(b.interests)) u.interests = b.interests.filter((s) => INTERESTS.some((x) => x.id === s));
@@ -314,7 +317,7 @@ app.post('/api/circles/:id/confirm-event', wrap((req) => {
 app.get('/api/dashboard', wrap(() => {
   const circles = Object.values(db.circles).map((c) => {
     const members = c.memberIds.map((id) => db.users[id]);
-    const langs = [...new Set(members.map((m) => (m.lang === 'zh' ? 'Chinese' : 'English')))];
+    const langs = [...new Set(members.map((m) => LANG_NAMES[m.lang] || 'English'))];
     const ev = EVENTS[c.skill] || EVENTS.cooking;
     return {
       id: c.id, name: c.name, skill: skillName(c.skill), status: c.status, qIndex: c.qIndex, questions: STORY.questions.length,
@@ -341,7 +344,7 @@ app.get('/api/dashboard', wrap(() => {
 }));
 
 // Demo helpers (remove for a real pilot).
-const BOTS = [['Mdm Lim', 'zh'], ['Mr Tan', 'zh'], ['Mrs Devi', 'en'], ['Mr Rahman', 'en'], ['Mdm Wong', 'zh'], ['Mr Singh', 'en']];
+const BOTS = [['Mdm Lim', 'zh'], ['Mr Ravi', 'ta'], ['Mrs Devi', 'hi'], ['Encik Rahman', 'ms'], ['Mdm Wong', 'zh'], ['Mr Singh', 'hi']];
 app.post('/api/demo/fill', wrap((req) => {
   const c = db.circles[req.body.circleId];
   if (!c) throw fail(404, 'Circle not found');

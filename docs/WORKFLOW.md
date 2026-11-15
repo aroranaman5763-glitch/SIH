@@ -9,17 +9,17 @@ The thread that ties it together is **skill → circle → deed**: the skill a s
 ```mermaid
 flowchart TD
     subgraph A["1. JOIN (app)"]
-        A1["Senior installs the app"] --> A2["Chooses language"]
+        A1["Senior installs the app"] --> A2["Chooses language<br/>English, 中文, Melayu, தமிழ், हिन्दी"]
         A2 --> A3["Enters first name"]
         A3 --> A4["Picks skills and interests<br/>cooking, gardening, sewing, teaching a language"]
         A4 --> A5["Links a Story card<br/>by tapping it on a device"]
-        A5 --> A6["Is given one of four characters<br/>in The Lost Recipe"]
+        A5 --> A6["Is given one of four characters<br/>in The Lion of Singapura"]
     end
 
     subgraph B["2. READ (app, 1 to 2 days, alone)"]
-        B1["Chapter 1: the stall on Hill Street"] --> B2["Chapter 2: the last night"]
-        B2 --> B3["Chapter 3: what you kept"]
-        B3 --> B4["Each chapter: a choice to make, one memory kept,<br/>one question about the reader's own life"]
+        B1["Chapter 1: the storm"] --> B2["Chapter 2: the beast on the shore"]
+        B2 --> B3["Chapter 3: a new name"]
+        B3 --> B4["Each chapter: a page of comic panels, read or listened to,<br/>a choice to make, one memory kept,<br/>one question about the reader's own life"]
         B4 --> B5["Cliffhanger: you are one of four witnesses<br/>and your memory is only one side"]
     end
 
