@@ -352,7 +352,7 @@ function welcome() {
       <div class="cover-top"><span>${t('issue')}</span><span class="price">${t('free')}</span></div>
       <h1 class="masthead">Story Hunt</h1>
       <p class="cover-sub">故事寻宝 · Buru Cerita · கதை வேட்டை · कहानी की खोज</p>
-      <div class="cover-art">${scene('beast')}<span class="burst">${t('coverBurst')}</span></div>
+      <div class="cover-art">${scene('beast')}</div>
       <p class="cover-tag">${t('tagline')}</p>
     </div>
     <h2 class="center">${t('chooseLang')}</h2>
