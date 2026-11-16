@@ -115,6 +115,8 @@ Each reply has `title`, `lines`, `buttons` (labels, or `null`) and `speak`. The 
 | `public/app.js`, `public/style.css`, `public/art.js` | The senior's app, its comic styling, and the panel art (SVG, no image files) |
 | `public/device.html`, `public/dashboard.html`, `public/partners.html` | Device page, partner dashboard, and the page where NGOs post events |
 | `docs/WORKFLOW.md` | Flowcharts for the pitch |
+| `docs/PITCH.md` | The 5-minute pitch script, slide by slide, with sources |
+| `demo/story-hunt-demo.mp4`, `scripts/demo-video.js` | The 80-second demo video, and the script that records it (`node scripts/demo-video.js`) |
 | `docs/DESIGN.md` | Design tokens and the comic components |
 
 ## What is real and what is demo-only
