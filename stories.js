@@ -71,6 +71,60 @@ const EVENT_DETAIL = t('One hour, together with your circle. You bring what you 
 
 const POINTS = { story: 100, event: 200 };
 
+// ---------- Events: NGOs post activities; a circle can teach a skill together ----------
+const EVENT_TYPES = [
+  { id: 'move', icon: '🏃', ...t('Walks and runs', '步行和跑步', 'நடை, ஓட்டம்', 'सैर और दौड़', 'Jalan dan larian') },
+  { id: 'cook', icon: '🍳', ...t('Cooking', '烹饪', 'சமையல்', 'खाना बनाना', 'Memasak') },
+  { id: 'health', icon: '🩺', ...t('Health checks', '健康检查', 'உடல்நலப் பரிசோதனை', 'सेहत जाँच', 'Pemeriksaan kesihatan') },
+  { id: 'arts', icon: '🎨', ...t('Arts and crafts', '艺术与手工', 'கலை, கைவினை', 'कला और शिल्प', 'Seni dan kraf') },
+  { id: 'music', icon: '🎵', ...t('Music', '音乐', 'இசை', 'संगीत', 'Muzik') },
+  { id: 'help', icon: '🤝', ...t('Volunteering', '义工', 'தன்னார்வம்', 'स्वयंसेवा', 'Sukarelawan') },
+  { id: 'learn', icon: '📚', ...t('Learning', '学习', 'கற்றல்', 'सीखना', 'Pembelajaran') },
+];
+// Which event types to suggest for each interest picked at sign-up.
+const INTEREST_TYPES = { kopi: ['cook', 'learn'], walks: ['move', 'health'], games: ['learn'], kids: ['help', 'music'], heritage: ['music', 'arts', 'cook'], crafts: ['arts'] };
+// The event type of a class a circle teaches, by skill.
+const SKILL_TYPE = { cooking: 'cook', gardening: 'learn', sewing: 'arts', language: 'learn', music: 'music', repairs: 'learn' };
+// A ready-made class name for each skill, so planning a class needs no typing.
+const CLASS_IDEAS = {
+  cooking: t('Home cooking: family recipes', '家常菜：家传食谱', 'வீட்டுச் சமையல்: குடும்பச் சமையல் குறிப்புகள்', 'घर का खाना: परिवार के नुस्ख़े', 'Masakan rumah: resipi keluarga'),
+  gardening: t('Grow herbs on your balcony', '在阳台种香草', 'பால்கனியில் மூலிகை வளர்ப்போம்', 'बालकनी में जड़ी-बूटियाँ उगाइए', 'Tanam herba di balkoni'),
+  sewing: t('Mend and alter your clothes', '缝补和改衣服', 'உங்கள் துணிகளைத் தைத்துச் சரிசெய்வோம்', 'कपड़ों की मरम्मत और सिलाई', 'Tampal dan ubah suai pakaian'),
+  language: t('Everyday words in our languages', '日常用语入门', 'எங்கள் மொழிகளில் அன்றாடச் சொற்கள்', 'हमारी भाषाओं के रोज़ के शब्द', 'Perkataan harian dalam bahasa kami'),
+  music: t('Sing the old songs together', '一起唱老歌', 'பழைய பாடல்களை ஒன்றாகப் பாடுவோம்', 'पुराने गीत साथ गाइए', 'Nyanyi lagu lama bersama'),
+  repairs: t('Fix small things at home', '修理家里的小东西', 'வீட்டுச் சிறு பொருட்களைப் பழுதுபார்ப்போம்', 'घर की छोटी चीज़ें ठीक करना', 'Baiki barang kecil di rumah'),
+};
+// Fictional venues for the demo, all near the café.
+const VENUES = [
+  { id: 'cafe-1', icon: '☕', name: CAFE.name },
+  { id: 'aac', icon: '🏠', name: t('Hill Street Active Ageing Centre', '禧街乐龄活动中心', 'ஹில் தெரு முதுமை நல மையம்', 'हिल स्ट्रीट एक्टिव एजिंग सेंटर', 'Pusat Penuaan Aktif Hill Street') },
+  { id: 'cc', icon: '🏛️', name: t('Hill Street Community Club', '禧街民众俱乐部', 'ஹில் தெரு சமூக மன்றம்', 'हिल स्ट्रीट कम्युनिटी क्लब', 'Kelab Masyarakat Hill Street') },
+];
+const TEACH_TIMES = ['10:00 am', '2:00 pm', '4:00 pm'];
+const TEACH_SIZES = [6, 10, 15];
+// Sample events so the list is never empty in the demo. All organisations are fictional.
+// `inDays` is counted from today; `taken` is places already filled.
+const PARK = t('Fort Canning Park, Hill Street entrance', '福康宁公园，禧街入口', 'ஃபோர்ட் கேனிங் பூங்கா, ஹில் தெரு நுழைவாயில்', 'फ़ोर्ट कैनिंग पार्क, हिल स्ट्रीट गेट', 'Taman Fort Canning, pintu masuk Hill Street');
+const EVENT_SEEDS = [
+  { kind: 'ngo', type: 'move', org: 'Silver Steps Running Club', inDays: 3, time: '7:30 am', place: PARK, spots: 40, taken: 18,
+    title: t('Sunrise 3 km walk or run', '日出3公里健走/慢跑', 'சூரிய உதய 3 கி.மீ. நடை அல்லது ஓட்டம்', 'सुबह की 3 किमी सैर या दौड़', 'Jalan atau larian 3 km waktu pagi') },
+  { kind: 'ngo', type: 'learn', org: 'Digital Kopi Club', inDays: 4, time: '2:00 pm', place: 'cafe-1', spots: 10, taken: 4,
+    title: t('Phone help: video calls with family', '手机教学：和家人视频通话', 'கைப்பேசி உதவி: குடும்பத்துடன் வீடியோ அழைப்பு', 'फ़ोन मदद: परिवार से वीडियो कॉल', 'Bantuan telefon: panggilan video dengan keluarga') },
+  { kind: 'ngo', type: 'cook', org: 'Kampong Kitchen Collective', inDays: 5, time: '10:00 am', place: 'aac', spots: 12, taken: 7,
+    title: t('Cook and share: festive sweets', '一起做节日甜点', 'சமைத்துப் பகிர்வோம்: பண்டிகை இனிப்புகள்', 'मिलकर बनाएँ: त्योहार की मिठाइयाँ', 'Masak dan kongsi: kuih perayaan') },
+  { kind: 'ngo', type: 'health', org: 'Golden Years Health Network', inDays: 6, time: '9:00 am', place: 'cc', spots: 30, taken: 11,
+    title: t('Free eye and blood pressure check', '免费眼睛和血压检查', 'இலவசக் கண், இரத்த அழுத்தப் பரிசோதனை', 'मुफ़्त आँख और ब्लड प्रेशर जाँच', 'Pemeriksaan mata dan tekanan darah percuma') },
+  { kind: 'circle', type: 'cook', skill: 'cooking', hostNames: ['Mdm Lim', 'Mdm Wong'], inDays: 7, time: '10:00 am', place: 'aac', spots: 10, taken: 4,
+    title: t('Nonya kueh, the way our mothers made it', '娘惹糕，照我们母亲的做法', 'எங்கள் அம்மாக்கள் செய்த முறையில் நோன்யா குவே', 'हमारी माँओं के तरीके से न्योन्या क्वे', 'Kuih Nyonya, cara ibu kami membuatnya') },
+  { kind: 'ngo', type: 'arts', org: 'Hill Street Active Ageing Centre', inDays: 8, time: '2:00 pm', place: 'aac', spots: 15, taken: 6,
+    title: t('Batik painting afternoon', '蜡染绘画下午', 'பாட்டிக் ஓவிய மதியம்', 'बाटिक पेंटिंग की दोपहर', 'Petang melukis batik') },
+  { kind: 'ngo', type: 'music', org: 'Harmony Seniors Choir', inDays: 10, time: '4:00 pm', place: 'cc', spots: 25, taken: 14,
+    title: t('Golden oldies sing-along', '经典老歌大合唱', 'பழைய பாடல்கள் சேர்ந்து பாடுவோம்', 'पुराने सदाबहार गीतों की महफ़िल', 'Nyanyi bersama lagu-lagu lama') },
+  { kind: 'ngo', type: 'help', org: "Sunbeam Children's Centre", inDays: 12, time: '10:00 am', spots: 8, taken: 3,
+    place: t("Sunbeam Children's Centre, Hill Street", '阳光儿童中心，禧街', 'சன்பீம் குழந்தைகள் மையம், ஹில் தெரு', 'सनबीम चिल्ड्रन्स सेंटर, हिल स्ट्रीट', 'Pusat Kanak-kanak Sunbeam, Hill Street'),
+    title: t('Read stories to young children', '给小朋友讲故事', 'சிறு குழந்தைகளுக்குக் கதை சொல்லுங்கள்', 'छोटे बच्चों को कहानियाँ सुनाइए', 'Bacakan cerita kepada kanak-kanak') },
+];
+
 // One question about the reader's own life after each chapter. The answers
 // become conversation cards at the café.
 const REFLECTIONS = [
@@ -602,4 +656,5 @@ const STORY = {
     'Tujuh ratus tahun kemudian, kota ini masih dibina oleh orang dari segala pelosok yang berkongsi ilmu. Kumpulan anda masih ada satu bab lagi, dan ia bukan di dalam aplikasi.'),
 };
 
-module.exports = { LANGS, SKILLS, INTERESTS, REWARDS, CAFE, EVENTS, EVENT_DETAIL, POINTS, REFLECTIONS, STORY };
+module.exports = { LANGS, SKILLS, INTERESTS, REWARDS, CAFE, EVENTS, EVENT_DETAIL, POINTS, REFLECTIONS, STORY,
+  EVENT_TYPES, INTEREST_TYPES, SKILL_TYPE, CLASS_IDEAS, VENUES, TEACH_TIMES, TEACH_SIZES, EVENT_SEEDS };

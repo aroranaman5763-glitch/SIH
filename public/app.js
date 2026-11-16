@@ -6,6 +6,7 @@ const S = {
   voice: localStorage.getItem('sh_voice'), rate: Number(localStorage.getItem('sh_rate')) || 0.95, sheet: false,
   tab: 'story', data: null, meta: null, rd: null, err: '', note: '',
   auth: 'welcome', ob: { step: 0, name: '', phone: '', pin: '', skills: [], interests: [] }, post: null, edit: null,
+  ev: 'on', evf: 'all', tc: null, // Events tab: what's on / teach view, type filter, the plan-a-class steps
 };
 
 const LANG_ORDER = ['en', 'zh', 'ms', 'ta', 'hi'];
@@ -181,6 +182,270 @@ const T = {
     season2: 'Lagenda seterusnya', season2B: 'Badang si Kuat · akan datang',
   },
 };
+// Events tab words, merged into T.
+const T_EVENTS = {
+  "en": {
+    "eTab": "Events",
+    "eT": "What's on",
+    "eH": "Join in, or teach with your circle.",
+    "eB": "Free activities from community groups near you, and classes taught by seniors.",
+    "eOn": "What's on",
+    "eTeach": "Teach",
+    "eGoing": "You're going",
+    "eCircle": "Your circle is teaching",
+    "eForYou": "Picked for you",
+    "eMore": "More events",
+    "eAll": "All",
+    "eBecause": "Because you enjoy",
+    "ePartner": "Community partner",
+    "eByCircle": "Taught by a Story Hunt circle",
+    "eToday": "Today",
+    "eTomorrow": "Tomorrow",
+    "eLeft": "{n} of {m} places left",
+    "eFull": "Full",
+    "eJoin": "I'll join",
+    "eGoingBtn": "You're going",
+    "eLeave": "I can't go any more",
+    "eTeaching": "You're teaching this",
+    "eTeachWith": "Teach with them",
+    "eStepDown": "Stop teaching this",
+    "eCancel": "Cancel this class",
+    "eCancelSure": "Cancel this class for everyone?",
+    "eNothing": "Nothing here yet. Check back soon.",
+    "eTT": "Teach with your circle",
+    "eTB": "Choose a skill, a day and a place. Your circle friends can join you as teachers, and neighbours sign up to learn.",
+    "eYourCircle": "Your circle",
+    "ePlan": "Plan a class",
+    "eS1": "What will your circle teach?",
+    "eS2": "When and where?",
+    "eS3": "Last step",
+    "eCircleSkill": "Your circle's skill",
+    "eYours": "Your skill",
+    "eDate": "Date",
+    "eTime": "Time",
+    "ePlace": "Place",
+    "eName": "Name your class",
+    "eHowMany": "How many learners?",
+    "ePeople": "people",
+    "ePost": "Post our class",
+    "ePosted": "Your class is posted. Your circle can join you as teachers.",
+    "eStep": "Step {n} of 3",
+    "eMax": "Your circle can run up to 3 classes at a time.",
+    "eOurs": "Your circle's classes",
+    "eLearners": "Learners",
+    "eNobody": "No one has signed up yet.",
+    "eTeachers": "Teaching"
+  },
+  "zh": {
+    "eTab": "活动",
+    "eT": "近期活动",
+    "eH": "一起参加，或和小组一起教课。",
+    "eB": "附近社区团体的免费活动，以及乐龄人士开的课。",
+    "eOn": "近期活动",
+    "eTeach": "教课",
+    "eGoing": "你要参加的",
+    "eCircle": "你的小组在开课",
+    "eForYou": "为你推荐",
+    "eMore": "更多活动",
+    "eAll": "全部",
+    "eBecause": "因为你喜欢",
+    "ePartner": "社区伙伴",
+    "eByCircle": "由故事寻宝小组授课",
+    "eToday": "今天",
+    "eTomorrow": "明天",
+    "eLeft": "还剩{n}个名额（共{m}个）",
+    "eFull": "已满",
+    "eJoin": "我要参加",
+    "eGoingBtn": "已报名",
+    "eLeave": "我去不了了",
+    "eTeaching": "你是这堂课的老师",
+    "eTeachWith": "和他们一起教",
+    "eStepDown": "不教这堂课了",
+    "eCancel": "取消这堂课",
+    "eCancelSure": "确定为所有人取消这堂课吗？",
+    "eNothing": "这里还没有活动，过几天再来看看。",
+    "eTT": "和小组一起教课",
+    "eTB": "选一项本领、一个日子和一个地点。小组的朋友可以和你一起教，邻居们可以报名来学。",
+    "eYourCircle": "你的小组",
+    "ePlan": "策划一堂课",
+    "eS1": "你们小组要教什么？",
+    "eS2": "什么时候，在哪里？",
+    "eS3": "最后一步",
+    "eCircleSkill": "小组的共同本领",
+    "eYours": "你的本领",
+    "eDate": "日期",
+    "eTime": "时间",
+    "ePlace": "地点",
+    "eName": "给课程起个名字",
+    "eHowMany": "收多少位学员？",
+    "ePeople": "人",
+    "ePost": "发布我们的课",
+    "ePosted": "课程已发布，小组的朋友可以加入一起教。",
+    "eStep": "第{n}步，共3步",
+    "eMax": "你的小组一次最多开3堂课。",
+    "eOurs": "你们小组的课",
+    "eLearners": "学员",
+    "eNobody": "还没有人报名。",
+    "eTeachers": "授课"
+  },
+  "ta": {
+    "eTab": "நிகழ்வுகள்",
+    "eT": "நடப்பவை",
+    "eH": "கலந்துகொள்ளுங்கள், அல்லது உங்கள் குழுவுடன் கற்பியுங்கள்.",
+    "eB": "அருகிலுள்ள சமூக அமைப்புகளின் இலவச நிகழ்வுகள், முதியோர் நடத்தும் வகுப்புகள்.",
+    "eOn": "நடப்பவை",
+    "eTeach": "கற்பிக்க",
+    "eGoing": "நீங்கள் போகும் நிகழ்வுகள்",
+    "eCircle": "உங்கள் குழு கற்பிக்கிறது",
+    "eForYou": "உங்களுக்காக",
+    "eMore": "மேலும் நிகழ்வுகள்",
+    "eAll": "அனைத்தும்",
+    "eBecause": "உங்களுக்குப் பிடித்தது:",
+    "ePartner": "சமூகப் பங்காளர்",
+    "eByCircle": "ஸ்டோரி ஹன்ட் குழு கற்பிக்கிறது",
+    "eToday": "இன்று",
+    "eTomorrow": "நாளை",
+    "eLeft": "{m} இடங்களில் {n} மீதம்",
+    "eFull": "நிறைந்தது",
+    "eJoin": "நான் வருகிறேன்",
+    "eGoingBtn": "நீங்கள் போகிறீர்கள்",
+    "eLeave": "என்னால் வர முடியாது",
+    "eTeaching": "நீங்கள் இதைக் கற்பிக்கிறீர்கள்",
+    "eTeachWith": "அவர்களுடன் கற்பியுங்கள்",
+    "eStepDown": "இதைக் கற்பிப்பதை நிறுத்து",
+    "eCancel": "இந்த வகுப்பை ரத்து செய்க",
+    "eCancelSure": "எல்லோருக்கும் இந்த வகுப்பை ரத்து செய்யவா?",
+    "eNothing": "இங்கே இன்னும் எதுவும் இல்லை. சீக்கிரம் மீண்டும் பாருங்கள்.",
+    "eTT": "உங்கள் குழுவுடன் கற்பியுங்கள்",
+    "eTB": "ஒரு திறன், ஒரு நாள், ஓர் இடம் தேர்ந்தெடுங்கள். குழு நண்பர்கள் உங்களுடன் கற்பிக்கலாம்; அக்கம்பக்கத்தினர் கற்க வரலாம்.",
+    "eYourCircle": "உங்கள் குழு",
+    "ePlan": "வகுப்பைத் திட்டமிடுங்கள்",
+    "eS1": "உங்கள் குழு என்ன கற்பிக்கும்?",
+    "eS2": "எப்போது, எங்கே?",
+    "eS3": "கடைசிப் படி",
+    "eCircleSkill": "குழுவின் திறன்",
+    "eYours": "உங்கள் திறன்",
+    "eDate": "தேதி",
+    "eTime": "நேரம்",
+    "ePlace": "இடம்",
+    "eName": "வகுப்புக்குப் பெயர் வையுங்கள்",
+    "eHowMany": "எத்தனை பேர் கற்க வரலாம்?",
+    "ePeople": "பேர்",
+    "ePost": "எங்கள் வகுப்பை வெளியிடு",
+    "ePosted": "உங்கள் வகுப்பு வெளியானது. குழு நண்பர்கள் உங்களுடன் கற்பிக்கச் சேரலாம்.",
+    "eStep": "படி {n} / 3",
+    "eMax": "உங்கள் குழு ஒரே நேரத்தில் 3 வகுப்புகள் வரை நடத்தலாம்.",
+    "eOurs": "உங்கள் குழுவின் வகுப்புகள்",
+    "eLearners": "கற்பவர்கள்",
+    "eNobody": "இன்னும் யாரும் சேரவில்லை.",
+    "eTeachers": "கற்பிப்பவர்கள்"
+  },
+  "hi": {
+    "eTab": "कार्यक्रम",
+    "eT": "क्या चल रहा है",
+    "eH": "शामिल होइए, या अपने समूह के साथ सिखाइए।",
+    "eB": "पास की सामुदायिक संस्थाओं के मुफ़्त कार्यक्रम, और बुज़ुर्गों की कक्षाएँ।",
+    "eOn": "क्या चल रहा है",
+    "eTeach": "सिखाएँ",
+    "eGoing": "आप इनमें जा रहे हैं",
+    "eCircle": "आपका समूह सिखा रहा है",
+    "eForYou": "आपके लिए",
+    "eMore": "और कार्यक्रम",
+    "eAll": "सभी",
+    "eBecause": "क्योंकि आपको पसंद है",
+    "ePartner": "सामुदायिक साथी",
+    "eByCircle": "स्टोरी हंट समूह की कक्षा",
+    "eToday": "आज",
+    "eTomorrow": "कल",
+    "eLeft": "{m} में से {n} जगह बाकी",
+    "eFull": "भर गया",
+    "eJoin": "शामिल हों",
+    "eGoingBtn": "आप जा रहे हैं",
+    "eLeave": "नाम वापस लें",
+    "eTeaching": "आप यह सिखा रहे हैं",
+    "eTeachWith": "इनके साथ सिखाएँ",
+    "eStepDown": "यह सिखाना छोड़ें",
+    "eCancel": "यह कक्षा रद्द करें",
+    "eCancelSure": "क्या सबके लिए यह कक्षा रद्द करें?",
+    "eNothing": "अभी यहाँ कुछ नहीं है। जल्द फिर देखिए।",
+    "eTT": "अपने समूह के साथ सिखाइए",
+    "eTB": "एक हुनर, एक दिन और एक जगह चुनिए। समूह के दोस्त आपके साथ सिखा सकते हैं, और पड़ोसी सीखने आ सकते हैं।",
+    "eYourCircle": "आपका समूह",
+    "ePlan": "कक्षा की योजना बनाएँ",
+    "eS1": "आपका समूह क्या सिखाएगा?",
+    "eS2": "कब और कहाँ?",
+    "eS3": "आख़िरी कदम",
+    "eCircleSkill": "समूह का हुनर",
+    "eYours": "आपका हुनर",
+    "eDate": "तारीख़",
+    "eTime": "समय",
+    "ePlace": "जगह",
+    "eName": "कक्षा का नाम",
+    "eHowMany": "कितने लोग सीखेंगे?",
+    "ePeople": "लोग",
+    "ePost": "हमारी कक्षा जोड़ें",
+    "ePosted": "आपकी कक्षा जुड़ गई। समूह के दोस्त साथ सिखाने के लिए जुड़ सकते हैं।",
+    "eStep": "कदम {n} / 3",
+    "eMax": "आपका समूह एक साथ 3 कक्षाएँ तक चला सकता है।",
+    "eOurs": "आपके समूह की कक्षाएँ",
+    "eLearners": "सीखने वाले",
+    "eNobody": "अभी कोई नहीं जुड़ा।",
+    "eTeachers": "सिखा रहे हैं"
+  },
+  "ms": {
+    "eTab": "Acara",
+    "eT": "Acara terkini",
+    "eH": "Sertai, atau mengajar bersama kumpulan anda.",
+    "eB": "Aktiviti percuma oleh kumpulan masyarakat berdekatan, dan kelas yang diajar oleh warga emas.",
+    "eOn": "Acara terkini",
+    "eTeach": "Mengajar",
+    "eGoing": "Acara yang anda sertai",
+    "eCircle": "Kumpulan anda sedang mengajar",
+    "eForYou": "Pilihan untuk anda",
+    "eMore": "Acara lain",
+    "eAll": "Semua",
+    "eBecause": "Kerana anda suka",
+    "ePartner": "Rakan masyarakat",
+    "eByCircle": "Diajar oleh kumpulan Story Hunt",
+    "eToday": "Hari ini",
+    "eTomorrow": "Esok",
+    "eLeft": "{n} daripada {m} tempat lagi",
+    "eFull": "Penuh",
+    "eJoin": "Saya mahu sertai",
+    "eGoingBtn": "Anda akan hadir",
+    "eLeave": "Saya tidak dapat hadir",
+    "eTeaching": "Anda mengajar kelas ini",
+    "eTeachWith": "Mengajar bersama mereka",
+    "eStepDown": "Berhenti mengajar kelas ini",
+    "eCancel": "Batalkan kelas ini",
+    "eCancelSure": "Batalkan kelas ini untuk semua orang?",
+    "eNothing": "Belum ada apa-apa di sini. Sila lihat semula nanti.",
+    "eTT": "Mengajar bersama kumpulan anda",
+    "eTB": "Pilih satu kemahiran, satu hari dan satu tempat. Rakan kumpulan boleh mengajar bersama anda, dan jiran boleh mendaftar untuk belajar.",
+    "eYourCircle": "Kumpulan anda",
+    "ePlan": "Rancang kelas",
+    "eS1": "Apa yang kumpulan anda akan ajar?",
+    "eS2": "Bila dan di mana?",
+    "eS3": "Langkah terakhir",
+    "eCircleSkill": "Kemahiran kumpulan",
+    "eYours": "Kemahiran anda",
+    "eDate": "Tarikh",
+    "eTime": "Masa",
+    "ePlace": "Tempat",
+    "eName": "Namakan kelas anda",
+    "eHowMany": "Berapa ramai pelajar?",
+    "ePeople": "orang",
+    "ePost": "Siarkan kelas kami",
+    "ePosted": "Kelas anda sudah disiarkan. Rakan kumpulan boleh menyertai anda sebagai guru.",
+    "eStep": "Langkah {n} daripada 3",
+    "eMax": "Kumpulan anda boleh menjalankan sehingga 3 kelas pada satu masa.",
+    "eOurs": "Kelas kumpulan anda",
+    "eLearners": "Pelajar",
+    "eNobody": "Belum ada yang mendaftar.",
+    "eTeachers": "Mengajar"
+  }
+};
+Object.entries(T_EVENTS).forEach(([l, words]) => Object.assign(T[l], words));
 const t = (k) => T[S.lang]?.[k] ?? T.en[k] ?? k;
 const fmt = (s, v) => s.replace(/\{(\w+)\}/g, (_, k) => v[k]);
 const TX = (o, lang) => (o == null ? '' : typeof o === 'string' ? o : o[lang] ?? o.en);
@@ -200,6 +465,8 @@ const ICONS = {
   star: '<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>',
   left: '<path d="M15 18l-6-6 6-6"/>', right: '<path d="M9 18l6-6-6-6"/>', x: '<path d="M18 6L6 18M6 6l12 12"/>',
   send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>',
+  cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  bulb: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>',
 };
 const ic = (n) => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
 const scene = (n, label = '') => window.ART.scene(n, esc(label));
@@ -550,6 +817,112 @@ function storyTab() {
     ${done ? `<div class="card soft"><p class="eyebrow">${t('season2')}</p><h3>${t('season2B')}</h3></div>` : ''}`;
 }
 
+// ---------- events tab ----------
+// Dates are YYYY-MM-DD in Singapore time, as on the server.
+const dayISO = (n = 0) => new Date(Date.now() + 8 * 3600e3 + n * 864e5).toISOString().slice(0, 10);
+const dateLabel = (iso) => iso === dayISO(0) ? t('eToday') : iso === dayISO(1) ? t('eTomorrow')
+  : new Date(iso + 'T00:00:00').toLocaleDateString(LOCALE[S.lang] || 'en-SG', { weekday: 'short', day: 'numeric', month: 'short' });
+const typeDef = (id) => S.meta.events.types.find((x) => x.id === id) || { icon: '📌', en: '' };
+// The interest (if any) that makes an event a good fit for this senior.
+function whyFor(e) {
+  const map = S.meta.events.interestTypes;
+  const hit = S.data.user.interests.find((i) => (map[i] || []).includes(e.type));
+  return hit ? S.meta.interests.find((x) => x.id === hit) : null;
+}
+const hostLine = (e) => e.hosts.map(esc).join(' & ');
+function eventCard(e) {
+  const ty = typeDef(e.type), left = Math.max(0, e.spots - e.taken), pct = Math.min(100, Math.round((e.taken / e.spots) * 100));
+  const why = !e.going && !e.host ? whyFor(e) : null;
+  const by = e.kind === 'ngo'
+    ? `<div class="row by"><span class="org" aria-hidden="true">✓</span><span class="grow"><b>${esc(e.org)}</b><br><span class="small muted">${t('ePartner')}</span></span></div>`
+    : `<div class="row by"><span class="stack">${e.hosts.slice(0, 3).map((n, i) => avatar(n, ['var(--seal)', 'var(--sea)', 'var(--good)'][i])).join('')}</span>
+        <span class="grow"><b>${hostLine(e)}</b><br><span class="small muted">${t('eByCircle')}</span></span></div>`;
+  const action = e.host ? `<p class="tag here" style="margin:14px 0 0;display:inline-block">${t('eTeaching')}</p>`
+    : e.going ? `<div class="btn on" role="status">${ic('check')} ${t('eGoingBtn')}</div><button class="link" data-a="evLeave" data-v="${e.id}">${t('eLeave')}</button>`
+    : left ? `<button class="btn" data-a="evJoin" data-v="${e.id}">${t('eJoin')}</button>`
+    : `<button class="btn quiet" disabled>${t('eFull')}</button>`;
+  return `<div class="card ev ${e.kind}">
+    <div class="row"><span class="kicon" aria-hidden="true">${ty.icon}</span><div class="grow"><p class="eyebrow">${L(ty)}</p><h3>${esc(L(e.title))}</h3></div></div>
+    ${by}
+    ${e.about ? `<p class="small">${esc(e.about)}</p>` : ''}
+    <ul class="facts">
+      <li><span aria-hidden="true">📅</span>${dateLabel(e.date)} · ${esc(e.time)}</li>
+      <li><span aria-hidden="true">${e.place.icon}</span>${esc(L(e.place.name))}</li>
+      <li><span aria-hidden="true">👥</span><span class="grow">${fmt(t('eLeft'), { n: left, m: e.spots })}<span class="bar" aria-hidden="true"><i style="width:${pct}%"></i></span></span></li>
+    </ul>
+    ${why ? `<p class="why">${why.icon} ${t('eBecause')} ${L(why).toLowerCase()}</p>` : ''}
+    ${action}</div>`;
+}
+// A class this senior's circle runs, as the circle sees it.
+function circleClassCard(e) {
+  const act = e.creator ? `<button class="btn ghost" data-a="evCancel" data-v="${e.id}">${t('eCancel')}</button>`
+    : e.host ? `<button class="btn ghost" data-a="evStepDown" data-v="${e.id}">${t('eStepDown')}</button>`
+    : `<button class="btn gold" data-a="evCohost" data-v="${e.id}">${t('eTeachWith')}</button>`;
+  return `<div class="card ev circle">
+    <div class="row"><span class="kicon" aria-hidden="true">${typeDef(e.type).icon}</span><div class="grow"><p class="eyebrow">${dateLabel(e.date)} · ${esc(e.time)}</p><h3>${esc(L(e.title))}</h3></div></div>
+    <ul class="facts"><li><span aria-hidden="true">${e.place.icon}</span>${esc(L(e.place.name))}</li>
+      <li><span aria-hidden="true">🧑‍🏫</span><span class="grow">${t('eTeachers')}: <b>${hostLine(e)}</b></span></li>
+      <li><span aria-hidden="true">👥</span><span class="grow">${t('eLearners')}: <b>${e.taken} / ${e.spots}</b></span></li></ul>
+    ${e.host ? (e.learners.length ? `<p class="small">${e.learners.map(esc).join(', ')}</p>` : `<p class="small muted">${t('eNobody')}</p>`) : ''}
+    ${act}</div>`;
+}
+function onView() {
+  const all = S.data.events, f = S.evf, keep = (e) => f === 'all' || e.type === f;
+  const going = all.filter((e) => e.going);
+  const invite = all.filter((e) => e.myCircle && !e.host && !e.going);
+  const open = all.filter((e) => !e.going && !e.host && !e.myCircle && keep(e));
+  const picked = open.filter((e) => whyFor(e)), rest = open.filter((e) => !whyFor(e));
+  const chips = [{ id: 'all', icon: '✨', label: t('eAll') }, ...S.meta.events.types.map((x) => ({ id: x.id, icon: x.icon, label: L(x) }))];
+  return `${invite.length ? `<h2 class="sk-h">${t('eCircle')}</h2>${invite.map(circleClassCard).join('')}` : ''}
+    ${going.length ? `<h2 class="sk-h">${t('eGoing')}</h2>${going.map(eventCard).join('')}` : ''}
+    <div class="chips inline sk-filter">${chips.map((c) => `<button class="chip ${f === c.id ? 'on' : ''}" data-a="evFilter" data-v="${c.id}" aria-pressed="${f === c.id}">${c.icon} ${c.label}</button>`).join('')}</div>
+    ${picked.length ? `<h2 class="sk-h">${t('eForYou')}</h2>${picked.map(eventCard).join('')}` : ''}
+    ${rest.length ? `<h2 class="sk-h">${picked.length ? t('eMore') : t('eOn')}</h2>${rest.map(eventCard).join('')}` : ''}
+    ${!open.length ? `<div class="card soft center"><p>${t('eNothing')}</p></div>` : ''}`;
+}
+function teachView() {
+  const u = S.data.user, c = S.data.circle, ours = S.data.events.filter((e) => e.myCircle), tc = S.tc;
+  const members = `<div class="crew">${c.members.map((m) => {
+    const r = role(m.roleIndex);
+    return `<span>${m.name ? avatar(m.name, m.color) : roleAvatar(r)}<small>${m.you ? t('you') : esc(m.name || L(r.title))}</small></span>`;
+  }).join('')}</div>`;
+  const head = ours.length ? `<h2 class="sk-h">${t('eOurs')}</h2>${ours.map(circleClassCard).join('')}` : '';
+  if (!tc) {
+    return `<div class="card soft"><p class="eyebrow">${t('eYourCircle')} · ${esc(c.name)}</p><h2>${t('eTT')}</h2>${members}<p>${t('eTB')}</p>
+      ${ours.length >= 3 ? `<p class="muted">${t('eMax')}</p>` : `<button class="btn" data-a="tcStart">${ic('bulb')} ${t('ePlan')}</button>`}</div>${head}`;
+  }
+  const pick = (act, v, on, label) => `<button class="chip ${on ? 'on' : ''}" data-a="${act}" data-v="${v}" aria-pressed="${on}">${label}</button>`;
+  let body = '', ok = false;
+  if (tc.step === 1) {
+    const rank = (x) => (x.id === c.skill ? 2 : 0) + (u.skills.includes(x.id) ? 1 : 0);
+    const order = [...S.meta.skills].sort((a, b) => rank(b) - rank(a));
+    body = `<h2>${t('eS1')}</h2><div class="chips">${order.map((x) => pick('tcSkill', x.id, tc.skill === x.id,
+      `<span class="ico">${x.icon}</span>${L(x)}${x.id === c.skill ? `<span class="small yours">★ ${t('eCircleSkill')}</span>` : u.skills.includes(x.id) ? `<span class="small yours">${t('eYours')}</span>` : ''}`)).join('')}</div>`;
+    ok = !!tc.skill;
+  } else if (tc.step === 2) {
+    const days = Array.from({ length: 14 }, (_, i) => dayISO(i + 1));
+    body = `<h2>${t('eS2')}</h2><h3>${t('eDate')}</h3><div class="chips inline sk-filter">${days.map((d) => pick('tcDate', d, tc.date === d, dateLabel(d))).join('')}</div>
+      <h3>${t('eTime')}</h3><div class="chips inline">${S.meta.events.times.map((x) => pick('tcTime', x, tc.time === x, x)).join('')}</div>
+      <h3>${t('ePlace')}</h3><div class="chips one">${S.meta.events.venues.map((v) => pick('tcPlace', v.id, tc.place === v.id, `${v.icon} ${L(v.name)}`)).join('')}</div>`;
+    ok = !!tc.date && !!tc.time && !!tc.place;
+  } else {
+    body = `<h2>${t('eS3')}</h2><label for="tcTitle"><h3>${t('eName')}</h3></label>
+      <input type="text" id="tcTitle" maxlength="60" value="${esc(tc.title)}">
+      <h3>${t('eHowMany')}</h3><div class="chips inline">${S.meta.events.sizes.map((n) => pick('tcSpots', n, tc.spots === n, `${n} ${t('ePeople')}`)).join('')}</div>`;
+    ok = !!tc.spots;
+  }
+  const last = tc.step === 3;
+  return `<div class="card"><p class="eyebrow">${fmt(t('eStep'), { n: tc.step })}</p>${body}
+    <button class="btn" data-a="${last ? 'tcPost' : 'tcNext'}" ${ok ? '' : 'disabled'}>${last ? t('ePost') : t('next')}</button>
+    <button class="btn ghost" data-a="tcBack">${tc.step === 1 ? t('cancel') : t('back')}</button></div>${head}`;
+}
+function eventsTab() {
+  const seg = [['on', 'eOn'], ['teach', 'eTeach']].map(([m, k]) => `<button class="${S.ev === m ? 'on' : ''}" data-a="evMode" data-v="${m}" aria-pressed="${S.ev === m}">${t(k)}</button>`).join('');
+  return `<div class="card sk-head"><p class="eyebrow">${t('eT')}</p><h1>${t('eH')}</h1><p class="muted">${t('eB')}</p></div>
+    <div class="seg" role="group" aria-label="${t('eT')}">${seg}</div>
+    ${S.ev === 'teach' ? teachView() : onView()}`;
+}
+
 // ---------- circle tab ----------
 function circleTab() {
   const { circle, phase } = S.data, open = phase === 'giveback' || phase === 'complete';
@@ -623,8 +996,8 @@ function render() {
   if (S.rd) { app.innerHTML = reader() + overlay; paintAudio(); return; }
   app.className = 'phone';
   const u = S.data.user, c = S.data.circle;
-  const tabs = [['story', 'book', t('story')], ['circle', 'users', t('circle')], ['rewards', 'gift', t('rewards')], ['profile', 'user', t('profile')]];
-  const body = { story: storyTab, circle: circleTab, rewards: rewardsTab, profile: profileTab }[S.tab]();
+  const tabs = [['story', 'book', t('story')], ['events', 'cal', t('eTab')], ['circle', 'users', t('circle')], ['rewards', 'gift', t('rewards')], ['profile', 'user', t('profile')]];
+  const body = { story: storyTab, events: eventsTab, circle: circleTab, rewards: rewardsTab, profile: profileTab }[S.tab]();
   const dot = { circle: c.messages.length > (S.seen || 0) && S.tab !== 'circle', profile: !u.cardLinked };
   app.innerHTML = `<div class="top"><span class="hi">${t('hello')}, ${esc(u.name)}</span><span class="row" style="gap:8px">${voiceChip()}<span class="pill">${ic('star')} ${u.points}</span></span></div>
     ${S.tab === 'story' ? journey(S.data.phase, c) : ''}${body}
@@ -701,9 +1074,29 @@ const A = {
   editName() { S.edit = 'name'; }, async saveName() { await post('profile', { name: val('editName') }); S.edit = null; },
   setSkill(v) { const next = toggle(S.data.user.skills, v); return next.length ? post('profile', { skills: next }) : false; },
   setInterest(v) { return post('profile', { interests: toggle(S.data.user.interests, v) }); },
-  signOut() { stopAudio(); localStorage.removeItem('sh_uid'); Object.assign(S, { uid: null, data: null, rd: null, post: null, sheet: false, tab: 'story', auth: 'welcome', err: '', ob: { step: 0, name: '', phone: '', pin: '', skills: [], interests: [] } }); },
+  // Events
+  evMode(v) { S.ev = v; S.tc = null; }, evFilter(v) { S.evf = v; },
+  evJoin(v) { return post(`events/${v}/join`); }, evLeave(v) { return post(`events/${v}/leave`); },
+  evCohost(v) { return post(`events/${v}/cohost`); }, evStepDown(v) { return post(`events/${v}/step-down`); },
+  evCancel(v) { return confirm(t('eCancelSure')) ? post(`events/${v}/cancel`) : false; },
+  tcStart() { S.tc = { step: 1, skill: S.data.circle.skill || S.data.user.skills[0] || null, date: null, time: null, place: null, spots: 10, title: '' }; },
+  tcSkill(v) { S.tc.skill = v; S.tc.title = ''; }, tcDate(v) { S.tc.date = v; }, tcTime(v) { S.tc.time = v; }, tcPlace(v) { S.tc.place = v; }, tcSpots(v) { S.tc.spots = Number(v); },
+  tcNext() {
+    const tc = S.tc;
+    if (tc.step === 1 && !tc.title) tc.title = L(S.meta.events.ideas[tc.skill]);
+    tc.step++;
+  },
+  tcBack() { if (S.tc.step === 1) S.tc = null; else S.tc.step--; },
+  async tcPost() {
+    const tc = S.tc, title = val('tcTitle').trim() || tc.title;
+    // An unchanged suggested name is sent blank, so the server keeps it in all five languages.
+    const own = title === L(S.meta.events.ideas[tc.skill]) ? '' : title;
+    await post('teach', { skill: tc.skill, date: tc.date, time: tc.time, place: tc.place, spots: tc.spots, title: own });
+    S.tc = null; toast(t('ePosted'));
+  },
+  signOut() { stopAudio(); localStorage.removeItem('sh_uid'); Object.assign(S, { uid: null, data: null, rd: null, post: null, sheet: false, tab: 'story', tc: null, ev: 'on', evf: 'all', auth: 'welcome', err: '', ob: { step: 0, name: '', phone: '', pin: '', skills: [], interests: [] } }); },
 };
-const KEEP_SCROLL = ['rdChip', 'slot', 'rsvp', 'redeem', 'quick', 'sendChat', 'setSkill', 'setInterest', 'size', 'link', 'cancelLink', 'unlink',
+const KEEP_SCROLL = ['evFilter', 'evJoin', 'evLeave', 'evCohost', 'evStepDown', 'tcSkill', 'tcDate', 'tcTime', 'tcPlace', 'tcSpots', 'rdChip', 'slot', 'rsvp', 'redeem', 'quick', 'sendChat', 'setSkill', 'setInterest', 'size', 'link', 'cancelLink', 'unlink',
   'obSkill', 'obInterest', 'pickLang', 'editName', 'saveName', 'sheet', 'closeSheet', 'pickVoice', 'readLang', 'rate'];
 
 async function run(el) {
@@ -722,7 +1115,7 @@ app.addEventListener('click', (ev) => {
 });
 app.addEventListener('input', (ev) => {
   const id = ev.target.id, v = ev.target.value;
-  if (id === 'name') S.ob.name = v; else if (id === 'phone') S.ob.phone = v; else if (id === 'pin') S.ob.pin = v; else if (id === 'reflect' && S.rd) S.rd.text = v;
+  if (id === 'name') S.ob.name = v; else if (id === 'phone') S.ob.phone = v; else if (id === 'pin') S.ob.pin = v; else if (id === 'reflect' && S.rd) S.rd.text = v; else if (id === 'tcTitle' && S.tc) S.tc.title = v;
 });
 app.addEventListener('keydown', (ev) => {
   if (ev.key === 'Enter' && ev.target.id === 'chat') app.querySelector('[data-a=sendChat]').click();

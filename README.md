@@ -85,6 +85,15 @@ Captions are read by a female narrator, and the Prince, Muthu and Ah Seng speak 
 
 The app shows where the circle meets: the café's name and address, a map drawn in the comic style (café, MRT, bus stop and the walking route), how to get there, what to look for on arrival, and a "Get directions" button that opens Google Maps. A short version appears while seniors are still reading, and the full one once the circle is ready. The café's details are in `CAFE` in `stories.js`. The café is a placeholder on Hill Street, below Fort Canning Hill, where the legend says Sang Nila Utama built his palace; replace it with the real partner's details and coordinates.
 
+## Events
+
+The Events tab has two parts:
+
+- **What's on:** free activities posted by community groups (walks and runs, cooking, health checks, arts, music, volunteering, learning), plus classes taught by Story Hunt circles. Events that match a senior's interests come first. One tap joins.
+- **Teach:** a senior plans a class in three steps (skill, date and place, name and size). Their circle friends can join as fellow teachers, and anyone can sign up to learn. Only the teachers see learners' names.
+
+NGOs post events at `/partners.html`, which also lists who has signed up. The sample events and organisations are fictional (`EVENT_SEEDS` in `stories.js`). The partner page has no sign-in yet, so it is demo-only.
+
 ## Device API
 
 Every device request carries `deviceToken` (default `demo-device-token`; set `DEVICE_TOKEN` to change it) and `checkpointId`.
@@ -104,7 +113,7 @@ Each reply has `title`, `lines`, `buttons` (labels, or `null`) and `speak`. The 
 | `stories.js` | The story, the four characters, questions, reflections, rewards, events |
 | `server.js` | Accounts, matching, the device state machine, points, dashboard data |
 | `public/app.js`, `public/style.css`, `public/art.js` | The senior's app, its comic styling, and the panel art (SVG, no image files) |
-| `public/device.html`, `public/dashboard.html` | Device page and partner dashboard |
+| `public/device.html`, `public/dashboard.html`, `public/partners.html` | Device page, partner dashboard, and the page where NGOs post events |
 | `docs/WORKFLOW.md` | Flowcharts for the pitch |
 | `docs/DESIGN.md` | Design tokens and the comic components |
 

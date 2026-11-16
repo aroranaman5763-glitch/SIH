@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Story Hunt · Post an event</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }
+    .form .full { grid-column: 1 / -1; }
+    .form input, .form select, .form textarea { width: 100%; font: inherit; font-size: .95rem; min-height: 48px; padding: 8px 12px; border: 2px solid var(--ink); border-radius: 8px; background: var(--panel); }
+    .form textarea { min-height: 80px; resize: vertical; }
+    .err { color: var(--seal); font-weight: 700; min-height: 1.2em; }
+    .kind { font-size: .72rem; font-weight: 700; color: var(--muted); }
+  </style>
+</head>
+<body>
+<div class="wide">
+  <p class="links"><a href="/">Senior app</a><a href="/dashboard.html">Partner dashboard</a><a href="/device.html">Café device</a></p>
+  <h1>Post an event for seniors</h1>
+  <p class="muted">For NGOs, community clubs and active ageing centres. Your event shows up straight away in the Events tab of the Story Hunt app,
+    and seniors whose interests match see it first. Demo only: there is no partner sign-in yet.</p>
+
+  <div class="card">
+    <h2>New event</h2>
+    <form class="form" id="f" autocomplete="off">
+      <div><label class="field" for="org">Organisation</label><input id="org" type="text" maxlength="60" placeholder="e.g. Silver Steps Running Club" required></div>
+      <div><label class="field" for="type">Type of event</label><select id="type"></select></div>
+      <div class="full"><label class="field" for="title">Event name</label><input id="title" type="text" maxlength="80" placeholder="e.g. Sunrise 3 km walk or run" required></div>
+      <div><label class="field" for="date">Date</label><input id="date" type="date" required></div>
+      <div><label class="field" for="time">Start time</label><input id="time" type="time" value="10:00" required></div>
+      <div><label class="field" for="spots">Places</label><input id="spots" type="number" min="1" max="500" value="20" required></div>
+      <div class="full"><label class="field" for="place">Where</label><input id="place" type="text" maxlength="80" list="venues" placeholder="Address or venue name" required>
+        <datalist id="venues"></datalist></div>
+      <div class="full"><label class="field" for="about">A short note for seniors (optional)</label>
+        <textarea id="about" maxlength="280" placeholder="What to bring, how long it takes, who it suits"></textarea></div>
+      <div class="full"><p class="err" id="err" role="alert"></p><button class="btn" type="submit" style="max-width:280px">Post event</button></div>
+    </form>
+  </div>
+
+  <h2 style="margin-top:8px">Upcoming events</h2>
+  <div class="card" id="list"></div>
+</div>
+<script>
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (id) => document.getElementById(id);
+const post = async (p, body) => {
+  const r = await fetch('/api' + p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+};
+const day = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString('en-SG', { weekday: 'short', day: 'numeric', month: 'short' });
+// Today in Singapore time, as the server counts it.
+const today = new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
+$('date').min = today;
+let types = [], last = '';
+
+async function load() {
+  const d = await (await fetch('/api/partner/events')).json();
+  if (!types.length) {
+    types = d.types;
+    $('type').innerHTML = types.map((x) => `<option value="${x.id}">${x.icon} ${esc(x.en)}</option>`).join('');
+    $('venues').innerHTML = d.venues.map((v) => `<option value="${esc(v.name)}">`).join('');
+  }
+  const key = JSON.stringify(d.events);
+  if (key === last) return;
+  last = key;
+  const icon = (id) => types.find((x) => x.id === id)?.icon || '📌';
+  $('list').innerHTML = d.events.length ? `<table><tr><th>When</th><th>Event</th><th>By</th><th>Where</th><th>Signed up</th><th></th></tr>
+    ${d.events.map((e) => `<tr><td>${day(e.date)}<br>${esc(e.time)}</td>
+      <td>${icon(e.type)} <b>${esc(e.title)}</b>${e.about ? `<br><span class="muted">${esc(e.about)}</span>` : ''}</td>
+      <td>${e.kind === 'ngo' ? esc(e.org) : `${esc(e.hosts.join(' & '))}<br><span class="kind">Story Hunt circle</span>`}</td>
+      <td>${esc(e.place)}</td>
+      <td><b>${e.taken} / ${e.spots}</b>${e.attendees.length ? `<br><span class="muted">${e.attendees.map(esc).join(', ')}</span>` : ''}</td>
+      <td>${e.kind === 'ngo' ? `<button class="btn mini quiet" data-del="${e.id}">Remove</button>` : ''}</td></tr>`).join('')}</table>`
+    : '<p class="muted">No upcoming events yet.</p>';
+}
+
+$('f').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  $('err').textContent = '';
+  try {
+    await post('/partner/events', { org: $('org').value, type: $('type').value, title: $('title').value, date: $('date').value,
+      time: $('time').value, spots: Number($('spots').value), place: $('place').value, about: $('about').value });
+    ['title', 'about'].forEach((id) => { $(id).value = ''; });
+    last = ''; await load();
+  } catch (e) { $('err').textContent = e.message; }
+});
+document.addEventListener('click', async (e) => {
+  const id = e.target.dataset.del;
+  if (id && confirm('Remove this event? Seniors who signed up will no longer see it.')) { await post(`/partner/events/${id}/delete`); last = ''; load(); }
+});
+load(); setInterval(load, 3000);
+</script>
+</body>
+</html>
